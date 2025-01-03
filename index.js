@@ -3,9 +3,12 @@ const app = express();
 require("dotenv").config();
 const mongoose = require("mongoose");
 const session = require("express-session");
+const cookie = require('cookie-parser');
+
+app.use(cookie());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-  
+
 mongoose
   .connect(process.env.MONGO_URI, {})
   .then(() => console.log("Connected to MongoDB"))

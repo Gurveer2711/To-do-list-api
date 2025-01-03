@@ -2,13 +2,15 @@ const express = require("express");
 const router = express.Router();
 const Todo = require("../models/todos");
 const auth = require("../middleware/auth");
+const cookie = require('cookie-parser');
 
 router.post("/", auth, async (req, res) => {
-  const { title, description } = req.body;
+    const { title, description } = req.body;
   try {
     const todo = new Todo({
       title: title,
-      description: description,
+        description: description,
+        user: req.user.id
     });
     await todo.save();
     res.status(200).json(todo);
@@ -38,7 +40,7 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",auth ,async (req, res) => {
   try {
     const { id } = req.params;
     const todo = await Todo.findById(id);
@@ -56,26 +58,28 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1; 
-    const pageSize = parseInt(req.query.pageSize) || 10; 
-    const skip = (page - 1) * pageSize; 
-    const total = await Todo.countDocuments();
+router.get("/", auth ,async (req, res) => {
+    const page = Math.max(1, Number.parseInt(req.query.page)) || 1;
+    const limit = Math.max(1, Number.parseInt(req.query.limit)) || 10;
+    try {
+    const todos = await Todo.find({ user: req.user.id })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    const todos = await Todo.find().skip(skip).limit(pageSize); 
-
+    const total = await Todo.countDocuments({ user: req.user.id });
+    const totalPages = Math.ceil(total / limit);
     res.json({
+      data: todos,
       page,
-      pageSize,
-      total,
-      totalPages: Math.ceil(total / pageSize),
-      todos,
+      limit,
+        total,
+        totalPages,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 
 module.exports = router;
