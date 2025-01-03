@@ -19,7 +19,8 @@ router.post("/register", async (req, res) => {
       email: email,
       password: password,
     });
-    const token = await newUser.save();
+    await newUser.save();
+    res.status(200).json({message : `${newUser.name} registered`});
     
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -42,10 +43,10 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d",});
+    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d",});
     req.session.user = { token };
-
-  } catch (error) {
+    res.status(200).json({message: "Login Successful",token});
+  } catch (error) { 
     console.error("Error during login:", error);
     res.status(500).json({ error: "Internal server error" });
   }
