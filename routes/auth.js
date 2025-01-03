@@ -38,13 +38,13 @@ router.post("/login", async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password,user.password);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1d",});
-    req.session.user = { token };
+    res.cookie("token", token);
     res.status(200).json({message: "Login Successful",token});
   } catch (error) { 
     console.error("Error during login:", error);
